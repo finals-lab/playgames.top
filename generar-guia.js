@@ -83,11 +83,12 @@ Extensión: alrededor de 300-400 palabras.`;
     }
 }
 
+// ⚠️ FUNCIÓN CORREGIDA - Aquí está el cambio importante
 async function actualizarIndex(guiasGeneradas) {
     const indexPath = path.join(__dirname, 'index.html');
     let indexContent = fs.readFileSync(indexPath, 'utf8');
     
-    // ⚠️ PARTE CORREGIDA: Añadir /playgames.top/ a los enlaces
+    // 🟢 CORREGIDO: Ahora los enlaces incluyen /playgames.top/
     const listaGuias = guiasGeneradas.map(g => `
     <div class="guia-item">
         <a href="/playgames.top/${g.archivo}">🎮 ${g.nombre}</a>
