@@ -83,29 +83,40 @@ Extensión: alrededor de 300-400 palabras.`;
     }
 }
 
-// ⚠️ FUNCIÓN CORREGIDA - Aquí está el cambio importante
+// ⚠️ FUNCIÓN CORREGIDA - Usa los marcadores de inicio y fin
 async function actualizarIndex(guiasGeneradas) {
     const indexPath = path.join(__dirname, 'index.html');
     let indexContent = fs.readFileSync(indexPath, 'utf8');
     
-    // 🟢 CORREGIDO: Ahora los enlaces incluyen /playgames.top/
+    // Generar la lista de guías con la ruta correcta
     const listaGuias = guiasGeneradas.map(g => `
     <div class="guia-item">
         <a href="/playgames.top/${g.archivo}">🎮 ${g.nombre}</a>
     </div>`).join('');
     
-    // Buscar el marcador o crearlo
-    if (indexContent.includes('<!-- GUIAS_AUTOMATICAS -->')) {
-        const seccion = `\n<div class="guias-lista">${listaGuias}</div>\n<!-- GUIAS_AUTOMATICAS -->`;
-        indexContent = indexContent.replace('<!-- GUIAS_AUTOMATICAS -->', seccion);
+    // Crear el bloque completo con los marcadores
+    const nuevoBloque = `<!-- GUIAS_AUTOMATICAS -->\n<div class="guias-lista">${listaGuias}</div>\n<!-- FIN GUIAS_AUTOMATICAS -->`;
+    
+    // Buscar y reemplazar TODO lo que hay entre los marcadores
+    const regex = /<!-- GUIAS_AUTOMATICAS -->[\s\S]*?<!-- FIN GUIAS_AUTOMATICAS -->/;
+    
+    if (regex.test(indexContent)) {
+        // Si encuentra los marcadores de inicio y fin, reemplaza todo el bloque
+        indexContent = indexContent.replace(regex, nuevoBloque);
+        console.log('✅ Reemplazado bloque entre marcadores');
+    } else if (indexContent.includes('<!-- GUIAS_AUTOMATICAS -->')) {
+        // Si solo encuentra el de inicio, reemplaza desde ahí hasta el final
+        const startPos = indexContent.indexOf('<!-- GUIAS_AUTOMATICAS -->');
+        indexContent = indexContent.substring(0, startPos) + nuevoBloque;
+        console.log('✅ Añadido bloque desde marcador inicio');
     } else {
         // Si no hay marcador, añadirlo antes de </body>
-        const seccion = `\n<div class="guias-lista">${listaGuias}</div>\n</body>`;
-        indexContent = indexContent.replace('</body>', seccion);
+        indexContent = indexContent.replace('</body>', `${nuevoBloque}\n</body>`);
+        console.log('✅ Añadido bloque antes de </body>');
     }
     
     fs.writeFileSync(indexPath, indexContent);
-    console.log('✅ Index actualizado con enlaces corregidos');
+    console.log('✅ Index actualizado correctamente');
 }
 
 async function main() {
