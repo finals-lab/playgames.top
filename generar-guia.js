@@ -68,7 +68,7 @@ Extensión: alrededor de 300-400 palabras.`;
     <div class="contenido">
         ${contenido.replace(/\n/g, '<br>')}
     </div>
-    <p><a href="/">← Volver a PlayGames.top</a></p>
+    <p><a href="/playgames.top/">← Volver a PlayGames.top</a></p>
 </body>
 </html>`;
 
@@ -81,6 +81,30 @@ Extensión: alrededor de 300-400 palabras.`;
         console.error(`❌ Error con ${juego.nombre}:`, error.message);
         return null;
     }
+}
+
+async function actualizarIndex(guiasGeneradas) {
+    const indexPath = path.join(__dirname, 'index.html');
+    let indexContent = fs.readFileSync(indexPath, 'utf8');
+    
+    // ⚠️ PARTE CORREGIDA: Añadir /playgames.top/ a los enlaces
+    const listaGuias = guiasGeneradas.map(g => `
+    <div class="guia-item">
+        <a href="/playgames.top/${g.archivo}">🎮 ${g.nombre}</a>
+    </div>`).join('');
+    
+    // Buscar el marcador o crearlo
+    if (indexContent.includes('<!-- GUIAS_AUTOMATICAS -->')) {
+        const seccion = `\n<div class="guias-lista">${listaGuias}</div>\n<!-- GUIAS_AUTOMATICAS -->`;
+        indexContent = indexContent.replace('<!-- GUIAS_AUTOMATICAS -->', seccion);
+    } else {
+        // Si no hay marcador, añadirlo antes de </body>
+        const seccion = `\n<div class="guias-lista">${listaGuias}</div>\n</body>`;
+        indexContent = indexContent.replace('</body>', seccion);
+    }
+    
+    fs.writeFileSync(indexPath, indexContent);
+    console.log('✅ Index actualizado con enlaces corregidos');
 }
 
 async function main() {
@@ -98,17 +122,7 @@ async function main() {
     
     // Actualizar index.html
     if (guiasGeneradas.length > 0) {
-        const indexPath = path.join(__dirname, 'index.html');
-        let indexContent = fs.readFileSync(indexPath, 'utf8');
-        
-        const listaGuias = guiasGeneradas.map(g => `
-    <div class="guia-item">
-        <a href="/${g.archivo}">🎮 ${g.nombre}</a>
-    </div>`).join('');
-        
-        const seccion = `\n<div class="guias-lista">${listaGuias}</div>\n<!-- GUIAS_AUTOMATICAS -->`;
-        indexContent = indexContent.replace('<!-- GUIAS_AUTOMATICAS -->', seccion);
-        fs.writeFileSync(indexPath, indexContent);
+        await actualizarIndex(guiasGeneradas);
     }
     
     console.log('✨ Proceso completado!');
