@@ -5,11 +5,19 @@ on:
     - cron: '0 */6 * * *'
   workflow_dispatch:
 
+# Permisos necesarios para Pages
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 jobs:
   generar:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pages: write
+      id-token: write
     
     steps:
       - name: Clonar repositorio
@@ -59,3 +67,16 @@ jobs:
             git push https://${{ secrets.GITHUB_TOKEN }}@github.com/finals-lab/playgames.top.git main
             echo "✅ Cambios guardados correctamente"
           fi
+      
+      # PASOS NUEVOS: Desplegar en GitHub Pages
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
