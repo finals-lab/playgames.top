@@ -8,28 +8,54 @@ on:
 jobs:
   generar:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
       - name: Clonar repositorio
-        uses: actions/checkout@v4  # <--- CAMBIO AQUÍ (era @v3)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Configurar Node.js
-        uses: actions/setup-node@v4  # <--- CAMBIO AQUÍ (era @v3)
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       
       - name: Instalar dependencias
         run: npm install node-fetch@2
+      
+      - name: Verificar API Key
+        run: |
+          if [ -z "${{ secrets.GROQ_API_KEY }}" ]; then
+            echo "❌ ERROR: GROQ_API_KEY no está configurada"
+            exit 1
+          else
+            echo "✅ API Key configurada correctamente"
+          fi
       
       - name: Ejecutar generador
         run: node generar-guia.js
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
       
+      - name: Verificar archivos generados
+        run: |
+          ls -la guia-*.html || echo "⚠️ No se generaron archivos"
+      
       - name: Guardar cambios
         run: |
           git config --global user.name "PlayGames Bot"
           git config --global user.email "bot@playgames.top"
           git add guia-*.html index.html
-          git diff --quiet && git diff --staged --quiet || git commit -m "🤖 Nuevas guías $(date)"
-          git push
+          if git diff --staged --quiet; then
+            echo "✅ No hay cambios para commit"
+          else
+            git commit -m "🤖 Nuevas guías $(date)"
+            git pull --rebase origin main
+            git push https://${{ secrets.GITHUB_TOKEN }}@github.com/finals-lab/playgames.top.git main
+            echo "✅ Cambios guardados correctamente"
+          fi
