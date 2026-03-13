@@ -52,7 +52,10 @@ jobs:
       
       - name: Verificar archivos generados
         run: |
-          ls -la guia-*.html || echo "⚠️ No se generaron archivos"
+          echo "📁 Archivos en el directorio:"
+          ls -la
+          echo "📄 Archivos de guía:"
+          ls -la guia-*.html || echo "⚠️ No hay archivos guia-*.html"
       
       - name: Guardar cambios
         run: |
@@ -74,9 +77,12 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: '.'   # Esto sube TODO el contenido de la raíz
+      
+      - name: Mostrar artifact creado
+        run: |
+          echo "✅ Artifact subido correctamente"
   
-  # NUEVO: Job separado para el despliegue con el entorno
   deploy:
     needs: generar
     runs-on: ubuntu-latest
@@ -92,7 +98,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: github-pages
-          path: '.'
+          path: '.'   # Descargar en la raíz
+      
+      - name: Listar archivos descargados
+        run: |
+          echo "📁 Archivos descargados:"
+          ls -la
+          echo "📄 Guías disponibles:"
+          ls -la guia-*.html
       
       - name: Deploy to GitHub Pages
         id: deployment
