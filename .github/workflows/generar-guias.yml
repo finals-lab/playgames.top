@@ -77,11 +77,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'   # Esto sube TODO el contenido de la raíz
-      
-      - name: Mostrar artifact creado
-        run: |
-          echo "✅ Artifact subido correctamente"
+          path: '.'
   
   deploy:
     needs: generar
@@ -98,13 +94,23 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: github-pages
-          path: '.'   # Descargar en la raíz
+          path: './downloaded'
       
-      - name: Listar archivos descargados
+      - name: Listar y descomprimir
         run: |
           echo "📁 Archivos descargados:"
+          ls -la ./downloaded
+          echo "📦 Descomprimiendo artifact..."
+          cd ./downloaded
+          tar -xf artifact.tar
+          echo "📁 Archivos después de descomprimir:"
           ls -la
           echo "📄 Guías disponibles:"
+          ls -la guia-*.html || echo "⚠️ No hay guías"
+          # Mover todo al directorio raíz
+          cp -r * ../
+          cd ..
+          echo "📁 Archivos en raíz:"
           ls -la guia-*.html
       
       - name: Deploy to GitHub Pages
